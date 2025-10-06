@@ -14,6 +14,7 @@ public class Chestlogger implements DedicatedServerModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("ChestLogger");
 
     private static ChestLogManager logManager;
+    private static ChestLockManager lockManager;
 
     @Override
     public void onInitializeServer() {
@@ -27,8 +28,14 @@ public class Chestlogger implements DedicatedServerModInitializer {
         // Register command handler will be done in ChestLogCommands
         ChestLogCommands.register();
 
+        // Register lock command handler
+        ChestLockCommands.register();
+
         // Register event handler will be done in ChestEventHandler
         ChestEventHandler.register();
+
+        // Register protection handler
+        ChestProtectionHandler.register();
     }
 
     private void onServerTick(MinecraftServer server) {
@@ -47,6 +54,9 @@ public class Chestlogger implements DedicatedServerModInitializer {
         // Initialize log manager
         logManager = new ChestLogManager(server);
 
+        // Initialize lock manager
+        lockManager = new ChestLockManager(server);
+
         LOGGER.info("Chest Logger erfolgreich gestartet!");
     }
 
@@ -55,10 +65,18 @@ public class Chestlogger implements DedicatedServerModInitializer {
         if (logManager != null) {
             logManager.flush(); // Save all unsaved logs before shutdown
         }
+        if (lockManager != null) {
+            lockManager.flush(); // Save all unsaved locks before shutdown
+        }
         logManager = null;
+        lockManager = null;
     }
 
     public static ChestLogManager getLogManager() {
         return logManager;
+    }
+
+    public static ChestLockManager getLockManager() {
+        return lockManager;
     }
 }

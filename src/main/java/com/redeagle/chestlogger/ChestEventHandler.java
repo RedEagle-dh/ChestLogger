@@ -27,6 +27,19 @@ public class ChestEventHandler {
         LOGGER.info("ChestEventHandler registered");
     }
 
+    public static boolean canOpenContainer(ServerPlayerEntity player, BlockPos pos, String dimension) {
+        if (!Config.enableChestLocking) {
+            return true;
+        }
+
+        ChestLockManager lockManager = Chestlogger.getLockManager();
+        if (lockManager == null) {
+            return true;
+        }
+
+        return lockManager.canAccess(player, pos, dimension);
+    }
+
     public static void onContainerOpen(ServerPlayerEntity player, ScreenHandler handler, BlockPos pos, String dimension) {
         LOGGER.info("Container opened event fired!");
 

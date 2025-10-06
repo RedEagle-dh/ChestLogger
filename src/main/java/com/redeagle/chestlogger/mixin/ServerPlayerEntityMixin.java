@@ -1,6 +1,9 @@
 package com.redeagle.chestlogger.mixin;
 
 import com.redeagle.chestlogger.ChestEventHandler;
+import com.redeagle.chestlogger.ChestLockManager;
+import com.redeagle.chestlogger.Chestlogger;
+import com.redeagle.chestlogger.Config;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;

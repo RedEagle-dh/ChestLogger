@@ -22,8 +22,6 @@ loom {
 
     runs {
         server {
-            // Set online-mode to false for development
-            property 'fabric-api.gametest', 'true'
             runDir 'run'
         }
     }

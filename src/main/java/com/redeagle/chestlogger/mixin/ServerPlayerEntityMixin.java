@@ -21,6 +21,9 @@ public abstract class ServerPlayerEntityMixin {
     @Unique
     private ScreenHandler chestLogger$lastScreenHandler;
 
+    @Unique
+    private int chestLogger$tickCounter = 0;
+
     @Inject(method = "openHandledScreen", at = @At("TAIL"))
     private void onOpenHandledScreen(net.minecraft.screen.NamedScreenHandlerFactory factory, CallbackInfoReturnable<?> cir) {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
@@ -39,11 +42,21 @@ public abstract class ServerPlayerEntityMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
+        // Only check every 5 ticks (4 times per second) for performance
+        if (chestLogger$lastOpenedContainerPos == null) {
+            return; // Early exit if no container is open
+        }
+
+        chestLogger$tickCounter++;
+        if (chestLogger$tickCounter < 5) {
+            return;
+        }
+        chestLogger$tickCounter = 0;
+
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
 
         // Check if screen handler was closed (player is back to inventory)
-        if (chestLogger$lastOpenedContainerPos != null &&
-            chestLogger$lastScreenHandler != null &&
+        if (chestLogger$lastScreenHandler != null &&
             player.currentScreenHandler != chestLogger$lastScreenHandler) {
             ChestEventHandler.onContainerClose(player, chestLogger$lastScreenHandler);
             chestLogger$lastOpenedContainerPos = null;

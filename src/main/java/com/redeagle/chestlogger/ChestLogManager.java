@@ -15,14 +15,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 public class ChestLogManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("ChestLogger");
     private static final String LOG_FILE_NAME = "chest_logs.dat";
+    private static final int SAVE_INTERVAL_TICKS = 600; // Save every 30 seconds (20 ticks = 1 second)
+    private static final int MAX_LOGS_BEFORE_SAVE = 50; // Save when we have 50+ unsaved logs
 
     private final File logFile;
     private final List<ChestAccessLog> logs;
+    private final ConcurrentLinkedQueue<ChestAccessLog> unsavedLogs;
+    private int ticksSinceLastSave = 0;
 
     public ChestLogManager(MinecraftServer server) {
         Path worldDir = server.getRunDirectory();
@@ -32,12 +37,35 @@ public class ChestLogManager {
         LOGGER.info("ChestLogManager initialized with log file: {}", logFile.getAbsolutePath());
 
         this.logs = new ArrayList<>();
+        this.unsavedLogs = new ConcurrentLinkedQueue<>();
         loadLogs();
     }
 
     public void addLog(ChestAccessLog log) {
         logs.add(log);
-        saveLogs();
+        unsavedLogs.add(log);
+
+        // Only save immediately if we have many unsaved logs
+        if (unsavedLogs.size() >= MAX_LOGS_BEFORE_SAVE) {
+            saveLogsAsync();
+        }
+    }
+
+    public void tick() {
+        ticksSinceLastSave++;
+
+        // Save periodically if there are unsaved logs
+        if (ticksSinceLastSave >= SAVE_INTERVAL_TICKS && !unsavedLogs.isEmpty()) {
+            saveLogsAsync();
+            ticksSinceLastSave = 0;
+        }
+    }
+
+    public void flush() {
+        // Force save all unsaved logs (e.g., on server shutdown)
+        if (!unsavedLogs.isEmpty()) {
+            saveLogs();
+        }
     }
 
     public List<ChestAccessLog> getAllLogs() {
@@ -96,6 +124,12 @@ public class ChestLogManager {
         } catch (IOException e) {
             LOGGER.error("Failed to load chest logs", e);
         }
+    }
+
+    private void saveLogsAsync() {
+        // Clear unsaved queue and save synchronously (we're already on server thread)
+        unsavedLogs.clear();
+        saveLogs();
     }
 
     private void saveLogs() {

@@ -2,6 +2,7 @@ package com.redeagle.chestlogger;
 
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +22,19 @@ public class Chestlogger implements DedicatedServerModInitializer {
         // Register server lifecycle events
         ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
+        ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
 
         // Register command handler will be done in ChestLogCommands
         ChestLogCommands.register();
 
         // Register event handler will be done in ChestEventHandler
         ChestEventHandler.register();
+    }
+
+    private void onServerTick(MinecraftServer server) {
+        if (logManager != null) {
+            logManager.tick();
+        }
     }
 
     private void onServerStarting(MinecraftServer server) {
@@ -44,6 +52,9 @@ public class Chestlogger implements DedicatedServerModInitializer {
 
     private void onServerStopping(MinecraftServer server) {
         LOGGER.info("Chest Logger wird heruntergefahren...");
+        if (logManager != null) {
+            logManager.flush(); // Save all unsaved logs before shutdown
+        }
         logManager = null;
     }
 

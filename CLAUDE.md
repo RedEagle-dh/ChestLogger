@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ChestLogger is a Fabric server-side mod for Minecraft 1.21.8 that tracks player interactions with containers (chests, barrels, shulker boxes, etc.). It logs what items players add or remove from containers with timestamps and positions.
+ChestLogger is a Fabric server-side mod for Minecraft 1.21.8 that:
+1. **Tracks** player interactions with containers (chests, barrels, shulker boxes, etc.) - logs what items players add/remove with timestamps and positions
+2. **Locks** containers to protect them from unauthorized access, breaking, fire, and explosions (TNT protection coming soon)
 
 ## Build and Development Commands
 
@@ -28,9 +30,9 @@ ChestLogger is a Fabric server-side mod for Minecraft 1.21.8 that tracks player 
 
 **Chestlogger** (Main Entry Point)
 - Implements `DedicatedServerModInitializer` for server-only execution
-- Initializes `ChestLogManager` on server start
-- Registers `ChestLogCommands` and `ChestEventHandler`
-- Provides static access to the log manager via `getLogManager()`
+- Initializes `ChestLogManager` and `ChestLockManager` on server start
+- Registers `ChestLogCommands`, `ChestLockCommands`, `ChestEventHandler`, and `ChestProtectionHandler`
+- Provides static access to managers via `getLogManager()` and `getLockManager()`
 
 **ChestLogManager** (Data Management)
 - Stores all access logs in memory and persists to `chest_logs.dat` in world directory using NBT format
@@ -51,24 +53,52 @@ ChestLogger is a Fabric server-side mod for Minecraft 1.21.8 that tracks player 
 - Calls `ChestEventHandler` methods at appropriate injection points
 - Handles screen handler opening and closing lifecycle
 
-**ChestLogCommands** (Command Interface)
+**ChestLogCommands** (Logging Command Interface)
 - `/chestlog query <player>` - View all logs for a specific player
 - `/chestlog recent [count]` - View recent logs (default 10, max 100)
 - `/chestlog at <pos>` - View logs for a specific block position
+- `/chestlog here` - View logs for container at current position
 - `/chestlog clear` - Delete all logs
 - `/chestlog clearold <days>` - Delete logs older than specified days
 - `/chestlog stats` - Show total log count
 - All commands require OP level 2+
 
+**ChestLockManager** (Lock Data Management)
+- Stores all locks in memory and persists to `chest_locks.dat` in world directory using NBT format
+- Manages lock/unlock operations with ownership validation
+- Provides access control via `canAccess()` method (checks ownership or admin level)
+- Tracks locks by dimension and position using "dimension:x:y:z" keys for O(1) lookup
+- Supports configurable max locks per player
+
+**ChestLockCommands** (Locking Command Interface)
+- `/chestlock lock` - Lock the container you're looking at (uses raycast to target)
+- `/chestlock unlock` - Unlock your locked container (or admin can unlock any)
+- `/chestlock info` - Show information about a locked container
+- `/chestlock list` - List all your locked containers with positions
+- All commands available to all players (OP level 0+)
+- Admins (OP level 2+) can unlock any container and bypass lock restrictions
+
+**ChestProtectionHandler** (Lock Protection)
+- Uses Fabric API's `PlayerBlockBreakEvents.BEFORE` for break protection
+- Prevents non-owners from breaking locked containers
+- Automatically removes lock when owner breaks their own container
+- Warns admins when they break someone else's locked container
+
 **Config** (Configuration Management)
 - Loads/saves from `config/chestlogger.json` as JSON
-- Settings:
+- Logging Settings:
   - `logRetentionDays` - Default retention period (default: 30)
   - `trackChests` - Track chest blocks (default: true)
   - `trackBarrels` - Track barrel blocks (default: true)
   - `trackShulkerBoxes` - Track shulker box blocks (default: true)
   - `trackEnderChests` - Track ender chest blocks (default: false)
   - `trackHoppers` - Track hopper blocks (default: false)
+- Locking Settings:
+  - `enableChestLocking` - Enable/disable the locking system (default: true)
+  - `maxLocksPerPlayer` - Maximum locks per player, -1 for unlimited (default: -1)
+  - `lockProtectFromFire` - Protect locked containers from fire (default: true)
+  - `lockProtectFromTNT` - Protect locked containers from explosions (default: true, NOT YET IMPLEMENTED)
+  - `lockProtectFromMobs` - Protect from mob griefing (default: true, relies on game rule)
 - Auto-creates default config if missing
 
 **ChestAccessLog** (Data Model)

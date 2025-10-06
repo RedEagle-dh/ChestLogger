@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "chestlogger",
+  "version": "${version}",
+  "name": "Chest Logger",
+  "description": "Logs all chest and container access with item changes",
+  "authors": ["RedEagle"],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/chestlogger/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "server": [
+      "com.redeagle.chestlogger.Chestlogger"
+    ]
+  },
+  "mixins": [
+    "chestlogger.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "java": ">=21"
+  }
+}

@@ -21,6 +21,13 @@ public class Config {
     public static boolean trackEnderChests = false;
     public static boolean trackHoppers = false;
 
+    // Chest locking config
+    public static boolean enableChestLocking = true;
+    public static int maxLocksPerPlayer = -1; // -1 = unlimited
+    public static boolean lockProtectFromFire = true;
+    public static boolean lockProtectFromTNT = true;
+    public static boolean lockProtectFromMobs = true;
+
     public static void load(Path configPath) {
         Path configFile = configPath.resolve("chestlogger.json");
 
@@ -35,6 +42,12 @@ public class Config {
                 trackShulkerBoxes = data.trackShulkerBoxes;
                 trackEnderChests = data.trackEnderChests;
                 trackHoppers = data.trackHoppers;
+
+                enableChestLocking = data.enableChestLocking;
+                maxLocksPerPlayer = data.maxLocksPerPlayer;
+                lockProtectFromFire = data.lockProtectFromFire;
+                lockProtectFromTNT = data.lockProtectFromTNT;
+                lockProtectFromMobs = data.lockProtectFromMobs;
 
                 LOGGER.info("Config loaded successfully");
             } catch (IOException e) {
@@ -61,6 +74,12 @@ public class Config {
             data.trackEnderChests = trackEnderChests;
             data.trackHoppers = trackHoppers;
 
+            data.enableChestLocking = enableChestLocking;
+            data.maxLocksPerPlayer = maxLocksPerPlayer;
+            data.lockProtectFromFire = lockProtectFromFire;
+            data.lockProtectFromTNT = lockProtectFromTNT;
+            data.lockProtectFromMobs = lockProtectFromMobs;
+
             String json = GSON.toJson(data);
             Files.writeString(configFile, json);
 
@@ -77,5 +96,11 @@ public class Config {
         boolean trackShulkerBoxes = true;
         boolean trackEnderChests = false;
         boolean trackHoppers = false;
+
+        boolean enableChestLocking = true;
+        int maxLocksPerPlayer = -1;
+        boolean lockProtectFromFire = true;
+        boolean lockProtectFromTNT = true;
+        boolean lockProtectFromMobs = true;
     }
 }
